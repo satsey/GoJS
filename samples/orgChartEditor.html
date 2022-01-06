@@ -66,7 +66,7 @@
             "clickCreatingTool.archetypeNodeData": { // allow double-click in background to create a new node
               name: "(new person)",
               title: "",
-              comments: ""
+              speaker: ""
             },
             "clickCreatingTool.insertPart": function(loc) {  // scroll to the new node
               var node = go.ClickCreatingTool.prototype.insertPart.call(this, loc);
@@ -155,7 +155,7 @@
           var newemp = {
             name: "(new person)",
             title: "",
-            comments: "",
+            speaker: "",
             parent: thisemp.key
           };
           myDiagram.model.addNodeData(newemp);
@@ -179,8 +179,8 @@
 
       // This converter is used by the Picture.
       function findHeadShot(key) {
-        if (key < 0 || key > 16) return "images/HSnopic.jpg"; // There are only 16 images on the server
-        return "images/HS" + key + ".jpg"
+          return "images/HSnopic.jpg"; // return no image
+
       }
 
       // define the Node template
@@ -278,7 +278,7 @@
                   editable: true,  // by default newlines are allowed
                   minSize: new go.Size(10, 14)
                 },
-                new go.Binding("text", "comments").makeTwoWay())
+                new go.Binding("text", "speaker").makeTwoWay())
             )  // end Table Panel
           ) // end Horizontal Panel
         );  // end Node
@@ -297,7 +297,7 @@
                   myDiagram.startTransaction("vacate");
                   // update the key, name, and comments
                   myDiagram.model.setDataProperty(thisemp, "name", "(Vacant)");
-                  myDiagram.model.setDataProperty(thisemp, "comments", "");
+                  myDiagram.model.setDataProperty(thisemp, "speaker", "");
                   myDiagram.commitTransaction("vacate");
                 }
               }
@@ -355,7 +355,7 @@
         {
           properties: {
             "key": { readOnly: true },
-            "comments": {}
+            "speaker": {}
           }
         });
 
