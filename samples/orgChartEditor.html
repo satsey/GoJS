@@ -65,8 +65,8 @@
             validCycle: go.Diagram.CycleDestinationTree, // make sure users can only create trees
             "clickCreatingTool.archetypeNodeData": { // allow double-click in background to create a new node
               name: "(new person)",
-              title: "",
-              speaker: ""
+              condition: "",
+              phraselogy: ""
             },
             "clickCreatingTool.insertPart": function(loc) {  // scroll to the new node
               var node = go.ClickCreatingTool.prototype.insertPart.call(this, loc);
@@ -106,26 +106,26 @@
         }
       });
 
-      // manage boss info manually when a node or link is deleted from the diagram
+      // manage parent info manually when a node or link is deleted from the diagram
       myDiagram.addDiagramListener("SelectionDeleting", function(e) {
         var part = e.subject.first(); // e.subject is the myDiagram.selection collection,
         // so we'll get the first since we know we only have one selection
-        myDiagram.startTransaction("clear boss");
+        myDiagram.startTransaction("clear parent");
         if (part instanceof go.Node) {
           var it = part.findTreeChildrenNodes(); // find all child nodes
           while (it.next()) { // now iterate through them and clear out the boss information
             var child = it.value;
-            var bossText = child.findObject("boss"); // since the boss TextBlock is named, we can access it by name
-            if (bossText === null) return;
-            bossText.text = "";
+            var parentText = child.findObject("parent"); // since the boss TextBlock is named, we can access it by name
+            if (parentText === null) return;
+            parentText.text = "";
           }
         } else if (part instanceof go.Link) {
           var child = part.toNode;
-          var bossText = child.findObject("boss"); // since the boss TextBlock is named, we can access it by name
-          if (bossText === null) return;
-          bossText.text = "";
+          var parentText = child.findObject("parent"); // since the boss TextBlock is named, we can access it by name
+          if (parentText === null) return;
+          parentText.text = "";
         }
-        myDiagram.commitTransaction("clear boss");
+        myDiagram.commitTransaction("clear parent");
       });
 
       var levelColors = ["#AC193D", "#2672EC", "#8C0095", "#5133AB",
@@ -154,8 +154,8 @@
           myDiagram.startTransaction("add employee");
           var newemp = {
             name: "(new person)",
-            title: "",
-            speaker: "",
+            condition: "",
+            phraselogy: "",
             parent: thisemp.key
           };
           myDiagram.model.addNodeData(newemp);
@@ -254,7 +254,7 @@
                   minSize: new go.Size(10, 16)
                 },
                 new go.Binding("text", "name").makeTwoWay()),
-              $(go.TextBlock, "Title: ", textStyle(),
+              $(go.TextBlock, "condition: ", textStyle(),
                 { row: 1, column: 0 }),
               $(go.TextBlock, textStyle(),
                 {
@@ -263,13 +263,13 @@
                   minSize: new go.Size(10, 14),
                   margin: new go.Margin(0, 0, 0, 3)
                 },
-                new go.Binding("text", "title").makeTwoWay()),
+                new go.Binding("text", "condition").makeTwoWay()),
               $(go.TextBlock, textStyle(),
                 { row: 2, column: 0 },
                 new go.Binding("text", "key", function(v) { return "ID: " + v; })),
               $(go.TextBlock, textStyle(),
-                { name: "boss", row: 2, column: 3, }, // we include a name so we can access this TextBlock when deleting Nodes/Links
-                new go.Binding("text", "parent", function(v) { return "Boss: " + v; })),
+                { name: "parent", row: 2, column: 3, }, // we include a name so we can access this TextBlock when deleting Nodes/Links
+                new go.Binding("text", "parent", function(v) { return "parent: " + v; })),
               $(go.TextBlock, textStyle(),  // the comments
                 {
                   row: 3, column: 0, columnSpan: 5,
@@ -278,7 +278,7 @@
                   editable: true,  // by default newlines are allowed
                   minSize: new go.Size(10, 14)
                 },
-                new go.Binding("text", "speaker").makeTwoWay())
+                new go.Binding("text", "phraselogy").makeTwoWay())
             )  // end Table Panel
           ) // end Horizontal Panel
         );  // end Node
@@ -297,7 +297,7 @@
                   myDiagram.startTransaction("vacate");
                   // update the key, name, and comments
                   myDiagram.model.setDataProperty(thisemp, "name", "(Vacant)");
-                  myDiagram.model.setDataProperty(thisemp, "speaker", "");
+                  myDiagram.model.setDataProperty(thisemp, "phraselogy", "");
                   myDiagram.commitTransaction("vacate");
                 }
               }
@@ -307,7 +307,7 @@
             $(go.TextBlock, "Remove Role"),
             {
               click: function(e, obj) {
-                // reparent the subtree to this node's boss, then remove the node
+                // reparent the subtree to this node's parent, then remove the node
                 var node = obj.part.adornedPart;
                 if (node !== null) {
                   myDiagram.startTransaction("reparent remove");
@@ -355,7 +355,7 @@
         {
           properties: {
             "key": { readOnly: true },
-            "speaker": {}
+            "phraselogy": {}
           }
         });
 
@@ -402,12 +402,12 @@
     This editable organizational chart sample color-codes the Nodes according to the tree level in the hierarchy.
   </p>
   <p>
-    Double click on a node in order to add a person or the diagram background to add a new boss. Double clicking the diagram uses the <a>ClickCreatingTool</a>
+    Double click on a node in order to add a person or the diagram background to add a new parent. Double clicking the diagram uses the <a>ClickCreatingTool</a>
     with a custom <a>ClickCreatingTool.insertPart</a> to scroll to the new node and start editing the <a>TextBlock</a> for its name .
   </p>
   <p>
     Drag a node onto another in order to change relationships.
-    You can also draw a link from a node's background to other nodes that have no "boss". Links can also be relinked to change relationships.
+    You can also draw a link from a node's background to other nodes that have no "parent". Links can also be relinked to change relationships.
     Right-click or tap-hold a Node to bring up a context menu which allows you to:
     <ul>
       <li>Vacate Position - remove the information specfic to the current person in that role</li>
@@ -435,26 +435,27 @@
       Diagram Model saved in JSON format:
     </div>
     <textarea id="mySavedModel" style="width:100%; height:270px;">
-{ "class": "go.TreeModel",
-  "nodeDataArray": [
-{"key":1, "name":"Stella Payne Diaz", "title":"CEO"},
-{"key":2, "name":"Luke Warm", "title":"VP Marketing/Sales", "parent":1},
-{"key":3, "name":"Meg Meehan Hoffa", "title":"Sales", "parent":2},
-{"key":4, "name":"Peggy Flaming", "title":"VP Engineering", "parent":1},
-{"key":5, "name":"Saul Wellingood", "title":"Manufacturing", "parent":4},
-{"key":6, "name":"Al Ligori", "title":"Marketing", "parent":2},
-{"key":7, "name":"Dot Stubadd", "title":"Sales Rep", "parent":3},
-{"key":8, "name":"Les Ismore", "title":"Project Mgr", "parent":5},
-{"key":9, "name":"April Lynn Parris", "title":"Events Mgr", "parent":6},
-{"key":10, "name":"Xavier Breath", "title":"Engineering", "parent":4},
-{"key":11, "name":"Anita Hammer", "title":"Process", "parent":5},
-{"key":12, "name":"Billy Aiken", "title":"Software", "parent":10},
-{"key":13, "name":"Stan Wellback", "title":"Testing", "parent":10},
-{"key":14, "name":"Marge Innovera", "title":"Hardware", "parent":10},
-{"key":15, "name":"Evan Elpus", "title":"Quality", "parent":5},
-{"key":16, "name":"Lotta B. Essen", "title":"Sales Rep", "parent":3}
- ]
-}
+      { "class": "TreeModel",
+      "nodeDataArray": [
+    {"key":1,"name":"PILOT","condition":"none","phraselogy":"tiger tengah checkpoint two"},
+    {"key":2,"name":"ITS","condition":"wirehook-up","parent":1,"phraselogy":"tiger tengah runway three"},
+    {"key":3,"name":"ATC","condition":"wirehook-down","parent":2,"phraselogy":"tiger tengah roger two"},
+    {"key":4,"name":"PILOT","condition":"none","parent":1,"phraselogy":"tiger tengah"},
+    {"key":5,"name":"PILOT","condition":"wirehook-up","parent":4,"phraselogy":"tiger tengah"},
+    {"key":6,"name":"ITS","condition":"none","parent":2,"phraselogy":"tiger tengah"},
+    {"key":7,"name":"ITS","condition":"none","parent":3,"phraselogy":"tiger tengah"},
+    {"key":8,"name":"PILOT","condition":"none","parent":5,"phraselogy":"tiger tengah"},
+    {"key":9,"name":"PILOT","condition":"none","parent":6,"phraselogy":"tiger tengah"},
+    {"key":10,"name":"PILOT","condition":"none","parent":4,"phraselogy":"tiger tengah"},
+    {"key":11,"name":"PILOT","condition":"none","parent":5,"phraselogy":"tiger tengah"},
+    {"key":12,"name":"PILOT","condition":"none","parent":10,"phraselogy":"tiger tengah"},
+    {"key":13,"name":"PILOT","condition":"none","parent":10,"phraselogy":"tiger tengah"},
+    {"key":14,"name":"PILOT","condition":"none","parent":10,"phraselogy":"tiger tengah"},
+    {"key":15,"name":"PILOT","condition":"none","parent":5,"phraselogy":"tiger tengah"},
+    {"key":16,"name":"PILOT","condition":"none","parent":3,"phraselogy":"tiger tengah"},
+    {"name":"CLIENT","condition":"none","phraselogy":"tiger alba","parent":16,"key":17},
+    {"name":"ITS","condition":"","phraselogy":"","parent":7,"key":18}
+    ]}
     </textarea>
   </div>
 </div>
